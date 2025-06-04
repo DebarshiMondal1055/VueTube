@@ -2,7 +2,6 @@ import mongoose from "mongoose"
 import { Video } from "./Video.model";
 import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
-import { useState } from "react";
 const userSchema=new mongoose.Schema({
     username:{
         type:String,
