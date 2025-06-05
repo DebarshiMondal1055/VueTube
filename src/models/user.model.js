@@ -1,5 +1,5 @@
 import mongoose from "mongoose"
-import { Video } from "./Video.model";
+import { Video } from "./Video.model.js";
 import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
 const userSchema=new mongoose.Schema({
@@ -19,7 +19,7 @@ const userSchema=new mongoose.Schema({
     },
     email:{
         type:String,
-        required:true[true,"email is required"],
+        required:true[true,"Email is required"],
         unique:true,
         trim:true
     },
@@ -29,33 +29,32 @@ const userSchema=new mongoose.Schema({
     },
     watchHistory:[{
         type:mongoose.Schema.Types.ObjectId,
-        ref:Video
+        ref:"Video"
     }],
     avatar:{
-        type:String,        //cloudnery service-A third party service which stores the images,videos
+        type:String,        //cloudinary service-A third party service which stores the images,videos
         required:true
     },
     coverImage:{
-        type:String,        //cloudnery service-A third party service which stores the images,videos
-        required:true
+        type:String,        //cloudinary service-A third party service which stores the images,videos
     },
     refreshToken:{
         type:String
     }
 },{timestamps: true})
 
-userSchema.pre("save",async function(){
-    if(this.isModified("password"))
-        this.password=bcrypt.hash(this.password)
+userSchema.pre("save",async function(next){
+    if(!this.isModified("password")) return next();
+    this.password=await bcrypt.hash(this.password,10)
     next();
 })
 
 userSchema.methods.isPasswordCorrect=async function(password){
-    return await bcrypt.compare(password.this.password);
+    return await bcrypt.compare(password,this.password);
 }
 
 userSchema.methods.generateAccessToken=function(){
-    jwt.sign(
+    return jwt.sign(
         {
             _id: this.id,
             email: this.email,
@@ -70,7 +69,7 @@ userSchema.methods.generateAccessToken=function(){
 }
 
 userSchema.methods.generateRefreshToken=function(){
-    jwt.sign(
+    return jwt.sign(
         {
             _id: this.id,
 

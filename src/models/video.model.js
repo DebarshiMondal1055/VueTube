@@ -1,5 +1,5 @@
 import mongoose  from "mongoose";
-import { User } from "./User.model";
+import { User } from "./User.model.js";
 import mongooseAggregatePaginate from "mongoose-paginate-v2"
 
 const videoSchema=new mongoose.Schema({
@@ -12,7 +12,7 @@ const videoSchema=new mongoose.Schema({
         required:true
     },
     duration:{
-        type:Number,        //from cloudnery
+        type:Number,        //from cloudinary
         required:true
     },
     Views:{
@@ -27,7 +27,7 @@ const videoSchema=new mongoose.Schema({
     },
     owner:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:User
+        ref:"User"
     },
     videoFile:{
         type:String,
