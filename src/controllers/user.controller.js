@@ -4,6 +4,8 @@ import { User } from "../models/User.model.js";
 import { uploadInCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken"
+import { Video } from "../models/Video.model.js";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshToken=async(userId)=>{
         try{
@@ -338,7 +340,7 @@ const updateUserCoverImage=asyncHandler(async(req,res)=>{
 
 
 const getUserChannelProfile=asyncHandler(async(req,res)=>{
-    const {username}=req.params;
+    const {username}=req.params;                // input is taken from url hence params
     if(!username){
         throw new ApiError(404,"Channel not Found");
     }
@@ -404,6 +406,55 @@ const getUserChannelProfile=asyncHandler(async(req,res)=>{
     .json(new ApiResponse(201,channel[0],"User channel fetched successfully"))
 })
 
+
+const getWatchHistory=asyncHandler(async(req,res)=>{
+    const user=await User.aggregate([
+        {
+            $match:{
+                _id:new mongoose.Types.ObjectId(req.user._id)
+            }
+        },
+        {
+            $lookup:{
+                from:"videos",
+                localField:"watchHistory",  //watchHistory in User Schema contains the object id the videos
+                foreignField:"_id",
+                as:"watchHistory",
+                pipeline:[
+                    {
+                        $lookup:{
+                            from:"users",
+                            localField:"owner",
+                            foreignField:"_id",
+                            as:"owner",
+                            pipeline:[
+                                {
+                                    $project:{
+                                        fullname:1,
+                                        username:1,
+                                        avatar:1
+                                    }
+                                },
+                                {
+                                    $addFields:{
+                                        owner:{
+                                            $first:"$owner"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+
+    return res
+    .status(201)
+    .json(new ApiResponse(201,user[0].watchHistory,"Watch History fetched successfully"));
+})
+
 export {registerUser,
     loginUser,
     logoutUser,
@@ -413,5 +464,6 @@ export {registerUser,
     changeAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,
-    getUserChannelProfile
+    getUserChannelProfile,
+    getWatchHistory
 };
