@@ -381,7 +381,7 @@ const getUserChannelProfile=asyncHandler(async(req,res)=>{
                     }
                 }
             }
-        },
+        }, 
         {
             $project :{                     //SEELCT
                 fullname:1,
@@ -412,5 +412,6 @@ export {registerUser,
     getCurrentUser,
     changeAccountDetails,
     updateUserAvatar,
-    updateUserCoverImage
+    updateUserCoverImage,
+    getUserChannelProfile
 };
