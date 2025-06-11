@@ -145,10 +145,10 @@ const logoutUser=asyncHandler(async(req,res)=>{
     */
 
     User.findByIdAndUpdate(
-        req.user._id,
+        req.user?._id,
         {
-            $set:{
-                refreshToken:undefined
+            $unset:{
+                refreshToken:1
             }
         },
         {
@@ -373,11 +373,11 @@ const getUserChannelProfile=asyncHandler(async(req,res)=>{
                     $size:"$subscribers"
                 },
                 subscriberToCount:{
-                    $size:"subscribedTo"                //COUNT
+                    $size:"$subscribedTo"                //COUNT
                 },
                 isSubscribed:{
                     $cond:{
-                        if:{$in:[req.user?._id,"$subscribers.subscriber"]},
+                        if:{$in:[new mongoose.Types.ObjectId(req.user?._id),"$subscribers.subscriber"]},
                         then:true,
                         else:false
                     }
@@ -435,14 +435,15 @@ const getWatchHistory=asyncHandler(async(req,res)=>{
                                         avatar:1
                                     }
                                 },
-                                {
-                                    $addFields:{
-                                        owner:{
-                                            $first:"$owner"
-                                        }
-                                    }
-                                }
+
                             ]
+                        }
+                    },
+                    {
+                        $addFields:{
+                            owner:{
+                                $first:"$owner"
+                            }
                         }
                     }
                 ]
