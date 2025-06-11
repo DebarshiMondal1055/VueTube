@@ -1,6 +1,6 @@
 import mongoose  from "mongoose";
 import { User } from "./User.model.js";
-import mongooseAggregatePaginate from "mongoose-paginate-v2"
+import mongooseAggregatePaginate from "mongoose-paginate-v2"        //for pagination (eg. more videos to be loaded on the next page)
 
 const videoSchema=new mongoose.Schema({
     title:{

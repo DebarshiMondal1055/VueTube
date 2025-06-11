@@ -1,4 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary'
+import { response } from 'express';
 import fs from "fs"
 
 cloudinary.config({ 
@@ -23,4 +24,18 @@ const uploadInCloudinary=async (localFilePath)=>{
     }
 }
 
-export {uploadInCloudinary}
+const deleteInCloudinary=async(asset)=>{
+    try{
+        if(!asset || !asset.public_id) return null;
+        const response=await cloudinary.uploader.destroy(asset.public_id,{
+            resource_type:'auto'
+        })
+        return response;
+    }
+    catch(error){
+        return null;
+    }
+
+}
+
+export {uploadInCloudinary,deleteInCloudinary}
