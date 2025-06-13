@@ -1,6 +1,7 @@
+import mongoose from "mongoose";
 import { Video } from "../models/video.model.js";
 import { ApiError } from "../utils/ApiError.js";
-import { ApiResponse } from "../utils/ApiResponse";
+import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/aynscHandler.js";
 import { deleteInCloudinary, uploadInCloudinary } from "../utils/cloudinary.js";
 
@@ -122,7 +123,7 @@ const deleteVideo=asyncHandler(async(req,res)=>{
     }
 
     const removedVideo=await deleteInCloudinary(deletedVideo.videoFile);
-    const removedThumbnail=await deleteInCloudinary(deleteInCloudinary.thumbnail.public_id);
+    const removedThumbnail=await deleteInCloudinary(deletedVideo.thumbnail);
     if(!removedVideo || ! removedThumbnail){
         throw new ApiError(500,"Failed to delete from cloudinary");
     }
@@ -133,11 +134,79 @@ const deleteVideo=asyncHandler(async(req,res)=>{
 
 })
 
+const getAllVideos=asyncHandler(async(req,res)=>{
+    const {limit=10,page=1,query,sortBy="createdAt",sortType=-1,userId}=req.query;
+    if(!userId && !query){
+        throw new ApiError(400,"Invalid Search")
+    }
+    let stateMatch={};
+    if(userId){
+        stateMatch.owner=new mongoose.Types.ObjectId(userId)
 
+    }
+    
+    if (query) {
+        stateMatch.title = {
+            $regex: query.trim(),                        // for pattern matching
+            $options: "i"                                // handling case sensitive
+        };
+    }
+    const videos=Video.aggregate([
+        {
+            $match:stateMatch
+        },
+        {
+            $sort:{
+                [sortBy]:(sortType==="desc"||sortType===-1)?-1:1
+            }
+        },
+        {
+            $lookup:{
+                from:"users",
+                localField:"owner",
+                foreignField:"_id",
+                as:"owner",
+                pipeline:[
+                    {
+                        $project:{
+                            username:1,
+                            avatar:1,
+                        }
+                    }
+                ]
+            },
+            
+            
+        },
+        {
+            $addFields:{
+                owner:{
+                    $first:"$owner"
+                }
+            }
+        }
+    ])
+    if(!videos){
+        throw new ApiError(500,"Aggregation failed:couldn't get the videos");
+    }
+    const options={
+        page:(Number)(page),
+        limit:(Number)(limit)
+    }
+    const result=await Video.aggregatePaginate(videos,options)
+
+    if(!result){
+        throw new ApiError(500,"Video fetch failed");
+    }
+    return res
+    .status(200)
+    .json(new ApiResponse(200,result,"videos fetched successfully"))
+})
 
 export {
     uploadVideo,
     getVideoById,
     updateVideo,
-    deleteVideo
+    deleteVideo,
+    getAllVideos
 }
