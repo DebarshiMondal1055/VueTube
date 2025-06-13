@@ -74,7 +74,7 @@ const getVideoById=asyncHandler(async(req,res)=>{
 })
 
 
-const updateVideo=asyncHandler(async(res,res)=>{
+const updateVideo=asyncHandler(async(req,res)=>{
     const {videoId} =req.params;
     const {title,description}=req.body
     
@@ -186,9 +186,6 @@ const getAllVideos=asyncHandler(async(req,res)=>{
             }
         }
     ])
-    if(!videos){
-        throw new ApiError(500,"Aggregation failed:couldn't get the videos");
-    }
     const options={
         page:(Number)(page),
         limit:(Number)(limit)

@@ -9,11 +9,11 @@ router.route("/uploadVideo").post(
     verfifyJWT,
     upload.fields([
         {
-            name:video,
+            name:"video",
             maxCount:1
         },
         {
-            name:thumbnail,
+            name:"thumbnail",
             maxCount:1
         }
     ]),uploadVideo)
