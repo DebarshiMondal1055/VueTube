@@ -3,21 +3,30 @@ import mongoose from "mongoose";
 const likeSchema=new mongoose.Schema({
     commentLike:{
         type:mongoose.Schema.Types.ObjectId,
-        ref: "Comment"
+        ref: "Comment",
+        
     },
     videoLike:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:"Video"
+        ref:"Video",
+        
     },
     tweetLike:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:"Tweet"
+        ref:"Tweet",
+        
     },
-    likedBy:{
+    owner:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:"User"
+        ref:"User",
+        
     }
 
 },{timestamps:true})
+
+likeSchema.index({ commentLike: 1, owner: 1 }, { unique: true, sparse: true });
+likeSchema.index({ videoLike: 1, owner: 1 }, { unique: true, sparse: true });
+likeSchema.index({ tweetLike: 1, owner: 1 }, { unique: true, sparse: true });
+
 
 export const Like=mongoose.model("Like",likeSchema)
