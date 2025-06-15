@@ -7,7 +7,7 @@ const playlistSchema=new mongoose.Schema({
     },
     description:{
         type:String,
-        requried:true
+        required:true
     },
     owner:{
         type:mongoose.Schema.Types.ObjectId,
