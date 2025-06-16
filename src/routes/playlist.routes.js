@@ -7,7 +7,7 @@ import { addVideoToPlayList, createPlayList,
     removeVideoFromPlaylist, 
     updatePlayList} from "../controllers/playlist.controller.js";
 
-const router=Router()``
+const router=Router()
 
 router.use(verfifyJWT)
 

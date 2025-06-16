@@ -4,5 +4,5 @@ import { verfifyJWT } from "../middlewares/auth.middleware.js";
 
 const router=Router()
 
-router.route("/health-check").get(verfifyJWT,healthCheck)
+router.route("/health-check").get(healthCheck)
 export default router;

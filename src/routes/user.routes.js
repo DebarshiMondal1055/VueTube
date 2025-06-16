@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { changeAccountDetails,
+import { addVideoToWatchHistory, changeAccountDetails,
      changePassword, 
      getCurrentUser, 
      getUserChannelProfile, 
@@ -53,4 +53,5 @@ router.route("/update-cover-image").patch(
 
 router.route("/c/:username").get(verfifyJWT,getUserChannelProfile);
 router.route("/history").get(verfifyJWT,getWatchHistory)
+router.route("/add-history").post(addVideoToWatchHistory)
 export default router;

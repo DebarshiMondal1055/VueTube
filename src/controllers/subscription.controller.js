@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import { asyncHandler } from "../utils/aynscHandler.js";
-import { ApiError } from "../utils/ApiError";
+import { ApiError } from "../utils/ApiError.js";
 import { Subscription } from "../models/subscription.models.js";
-import { ApiResponse } from "../utils/ApiResponse";
+import { ApiResponse } from "../utils/ApiResponse.js";
 
 
 

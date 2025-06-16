@@ -455,6 +455,38 @@ const getWatchHistory=asyncHandler(async(req,res)=>{
     .json(new ApiResponse(201,user[0].watchHistory,"Watch History fetched successfully"));
 })
 
+const addVideoToWatchHistory=asyncHandler(async(req,res)=>{
+    const {videoId}=req.params;
+    if(!videoId || !mongoose.Types.ObjectId.isValid(videoId)){
+        throw new ApiError(400,"Invalid video ID")
+    }
+
+    const updatedWatchHistory=await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $pull: { watchHistory: new mongoose.Types.ObjectId(videoId) },
+            $push: {
+            watchHistory: {
+                $each: [new mongoose.Types.ObjectId(videoId)],
+                $position: 0,
+                $slice: 100
+                }
+            }
+        },
+        {
+            new:true
+        }
+    )
+    
+    if(!updatedWatchHistory){
+        throw new ApiError(500,"Failed to update watch history")
+    }
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200,updatedWatchHistory.watchHistory,"Watch History updates successfully"))
+})
+
 export {registerUser,
     loginUser,
     logoutUser,
@@ -465,5 +497,6 @@ export {registerUser,
     updateUserAvatar,
     updateUserCoverImage,
     getUserChannelProfile,
-    getWatchHistory
+    getWatchHistory,
+    addVideoToWatchHistory
 };
