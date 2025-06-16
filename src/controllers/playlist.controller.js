@@ -33,7 +33,7 @@ const createPlayList=asyncHandler(async(req,res)=>{
 const getUserPlaylist=asyncHandler(async(req,res)=>{
     const {userId}=req.params
 
-    if(!userId || !new mongoose.Types.ObjectId.isValid(userId)){
+    if(!userId || !mongoose.Types.ObjectId.isValid(userId)){
         throw new ApiError(400,"Invalid user id")
     }
 
@@ -173,7 +173,7 @@ const removeVideoFromPlaylist=asyncHandler(async(req,res)=>{
 const deletePlayList=asyncHandler(async(req,res)=>{
     const {playListId}=req.params;
 
-    if(!playListId || !new mongoose.Types.ObjectId.isValid(playListId)){
+    if(!playListId || !mongoose.Types.ObjectId.isValid(playListId)){
         throw new ApiError(400,"Invalid playlist id");
     }
 
@@ -234,7 +234,7 @@ const updatePlayList=asyncHandler(async(req,res)=>{
 
 const getPlaylistById=asyncHandler(async(req,res)=>{
     const {playlistId}=req.params;
-    if(!playlistId || !new mongoose.Types.ObjectId.isValid(playlistId)){
+    if(!playlistId || !mongoose.Types.ObjectId.isValid(playlistId)){
         throw new ApiError(400,"Invalid playlist id");
     }
 
