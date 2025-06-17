@@ -17,12 +17,20 @@ const uploadVideo=asyncHandler(async(req,res)=>{
         5. return a respone 
     */
     const {title,description}=req.body;
+    
     if(title?.trim()==="" || description?.trim()===""){
         throw new ApiError(400,"title and description field are required");
     }
+    
+    console.log(req.files);
 
-    const videoLocalPath=req.files?.video[0]?.path;
+    const videoLocalPath=req.files?.videoFile[0]?.path;
+    
     const thumbnailLocalPath=req.files?.thumbnail[0]?.path;
+    
+    console.log("video Local",videoLocalPath);
+    
+    console.log("thmblocal",thumbnailLocalPath)
 
     if(!videoLocalPath || !thumbnailLocalPath){
         throw new ApiError(400,"Video and thumbnail field is required");
@@ -33,15 +41,16 @@ const uploadVideo=asyncHandler(async(req,res)=>{
     if(!uploadedVideo || !thumbnail){
         throw new ApiError(500,"Video Upload Failed in cloudinary");
     }
-
+    console.log(uploadedVideo)
+    console.log(thumbnail)      //executed
     const video= await Video.create({
         title,
         description,
         duration:uploadedVideo?.duration,
         isPublished:true,
         owner: req.user?._id,
-        videoFile:uploadedVideo,
-        thumbnail
+        videoFile: uploadedVideo.url|| "",
+        thumbnail: thumbnail.url||"",
 
     })
 
@@ -59,11 +68,24 @@ const uploadVideo=asyncHandler(async(req,res)=>{
 
 const getVideoById=asyncHandler(async(req,res)=>{
     const {videoId}=req.params;
-    if(!videoId){
+    
+    if(!videoId || !mongoose.Types.ObjectId.isValid(videoId)){
         throw new ApiError(400,"No video id passed");
     }
+    const video=await Video.findByIdAndUpdate(
+        videoId,
+        {
+            $inc:{
+                views:1
+            }
+        },
+        {
+            new:true
+        }
+    );
+
+    console.log(video);
     
-    const video=await Video.findById(videoId);
     if(!video){
         throw new ApiError(400,"No such video found");
     }
@@ -78,7 +100,7 @@ const updateVideo=asyncHandler(async(req,res)=>{
     const {videoId} =req.params;
     const {title,description}=req.body
     
-    if(!videoId){
+    if(!videoId || !mongoose.Types.ObjectId.isValid(videoId)){
         throw new ApiError(400,"Invalid video id");
     }
     
@@ -135,7 +157,7 @@ const deleteVideo=asyncHandler(async(req,res)=>{
 })
 
 const getAllVideos=asyncHandler(async(req,res)=>{
-    const {limit=10,page=1,query,sortBy="createdAt",sortType=-1,userId}=req.query;
+    const {limit=10,page=1,query,sortBy="createdAt",sortType="-1",userId}=req.query;
     if(!userId && !query){
         throw new ApiError(400,"Invalid Search")
     }
@@ -151,13 +173,13 @@ const getAllVideos=asyncHandler(async(req,res)=>{
             $options: "i"                                // handling case sensitive
         };
     }
-    const videos=Video.aggregate([
+    const videos=await Video.aggregate([
         {
             $match:stateMatch
         },
         {
             $sort:{
-                [sortBy]:(sortType==="desc"||sortType===-1)?-1:1
+                [sortBy]:(sortType==="desc"||sortType==="-1")?-1:1
             }
         },
         {
@@ -184,20 +206,26 @@ const getAllVideos=asyncHandler(async(req,res)=>{
                     $first:"$owner"
                 }
             }
-        }
+        },
+        {
+            $skip: (Number(page) - 1) * Number(limit),
+        },
+        {
+            $limit: Number(limit),
+        },
     ])
-    const options={
-        page:(Number)(page),
-        limit:(Number)(limit)
-    }
-    const result=await Video.aggregatePaginate(videos,options)
+    // const options={
+    //     page:Number(page),
+    //     limit:Number(limit)
+    // }
 
-    if(!result){
+
+    if(!videos){
         throw new ApiError(500,"Video fetch failed");
     }
     return res
     .status(200)
-    .json(new ApiResponse(200,result,"videos fetched successfully"))
+    .json(new ApiResponse(200,videos,"videos fetched successfully"))
 })
 
 export {

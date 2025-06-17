@@ -9,7 +9,7 @@ router.route("/uploadVideo").post(
     verfifyJWT,
     upload.fields([
         {
-            name:"video",
+            name:"videoFile",
             maxCount:1
         },
         {
@@ -18,9 +18,9 @@ router.route("/uploadVideo").post(
         }
     ]),uploadVideo)
 
-router.route("/get-video-by-id").get(verfifyJWT,getVideoById);
-router.route("/update-video").patch(verfifyJWT,updateVideo);
+router.route("/v/:videoId").get(verfifyJWT,getVideoById);
+router.route("/v/:videoId").patch(verfifyJWT,updateVideo);
 router.route("/delete-video").post(verfifyJWT,deleteVideo);
-router.route("get-all-videos").get(verfifyJWT,getAllVideos)
+router.route("/get-all-videos").get(verfifyJWT,getAllVideos)
 
 export default router;
