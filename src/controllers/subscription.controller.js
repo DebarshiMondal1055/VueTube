@@ -7,13 +7,15 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 
 
 const toggleSubscription=asyncHandler(async(req,res)=>{
-    const {channelId}=req.params
+    const {channelId}=req.params;
+
+    console.log(channelId)
 
     if(!channelId || !mongoose.Types.ObjectId.isValid(channelId)){
         throw new ApiError(400,"Invalid channel Id");
     }
 
-    if(channelId===req.user?._id.toString()){
+    if(channelId.toString()===req.user?._id.toString()){
         throw new ApiError(400,"cannot unsubscribe to your own channel")
     }
 
