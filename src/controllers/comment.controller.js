@@ -4,16 +4,17 @@ import { Comment } from "../models/comment.model.js";
 import mongoose from "mongoose";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/User.model.js";
+import { Video } from "../models/video.model.js";
 
 
 
 const getVideoComments=asyncHandler(async(req,res)=>{
     const {videoId}=req.params;
     const {page=1,limit=5}=req.query;
-    if(!videoId){
+    if(!videoId || !mongoose.Types.ObjectId.isValid(videoId)){
         throw new ApiError(400,"Invalid video id");
     }
-    const aggregate=Comment.aggregate([
+    const comments=await Comment.aggregate([
         {
             $match:{
                 video: new mongoose.Types.ObjectId(videoId)
@@ -46,36 +47,49 @@ const getVideoComments=asyncHandler(async(req,res)=>{
                     $first:"$owner"
                 }
             }
-        }
+        },
+        {
+            $skip: (Number(page) - 1) * Number(limit),
+        },
+        {
+            $limit: Number(limit),
+        },
     ])
 
-    const options={
-        page:(Number)(page),
-        limit:(Number)(limit)
-    }
-    const comments= await Comment.aggregatePaginate(aggregate,options);
+    // const options={
+    //     page:(Number)(page),
+    //     limit:(Number)(limit)
+    // }
     if(!comments){
         throw new ApiError(500,"Failed to fetch comments")
     }
 
     return res.
     status(200)
-    .json(new ApiResponse(200,comments,"Comments fetched successfully"))
+    .json(new ApiResponse(200,{comments,commentsCount:comments.length},"Comments fetched successfully"))
 })
 
 
 const addComment=asyncHandler(async(req,res)=>{
-    const {content} =req.body;
+    const {content} =req.body || "";
     const {videoId} =req.params;
+    console.log(req.body);
     
-    if(!content || !videoId){
+    if(!content || !videoId || !mongoose.Types.ObjectId.isValid(videoId)){
         throw new ApiError(400,"Add Content field or invalid video ID")
     }
+
+    const video=await Video.findById(videoId);
+
+    if(!video){
+        throw new ApiError(400,"Cannot find Video")
+    }
+    
     const comment=await Comment.create({
         content,
         video:videoId,
-        owner: new mongoose.Types.ObjectId(req.user?._id)
-    }) 
+        owner: req.user?._id
+    }); 
     
     if(!comment){
         throw new ApiError(500,"Failed to create Comment")
