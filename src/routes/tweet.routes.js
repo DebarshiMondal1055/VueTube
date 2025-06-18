@@ -7,7 +7,7 @@ const router=Router()
 router.use(verfifyJWT)
 
 router.route("/create-tweet").post(createTweet)
-router.route("/get-user-tweets").get(getUserTweets)
-router.route("/delete-tweet").post(deleteTweet);
+router.route("/users/:userId").get(getUserTweets)
+router.route("/t/:tweetId").post(deleteTweet);
 
 export default router;

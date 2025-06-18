@@ -14,8 +14,8 @@ const createPlayList=asyncHandler(async(req,res)=>{
     }
 
     const playlist=await Playlist.create({
-        name,
-        description,
+        name:name.trim(),
+        description:description.trim(),
         owner:req.user?._id
     })
     
@@ -40,7 +40,7 @@ const getUserPlaylist=asyncHandler(async(req,res)=>{
     const playList=await Playlist.aggregate([
         {
             $match:{
-                owner:userId
+                owner: new mongoose.Types.ObjectId(userId)
             }
         },
         {
@@ -98,13 +98,13 @@ const getUserPlaylist=asyncHandler(async(req,res)=>{
 
 
 const addVideoToPlayList=asyncHandler(async(req,res)=>{
-    const {videoId,playListId}=req.params;
+    const {playListId,videoId}=req.params;
     
     if(!videoId || !playListId){
         throw new ApiError(400,"Invalid video ID or Playlist ID")
     }
 
-    if(!new mongoose.Types.ObjectId.isValid(videoId) || !new mongoose.Types.ObjectId.isValid(playListId)){
+    if(!mongoose.Types.ObjectId.isValid(videoId) || !mongoose.Types.ObjectId.isValid(playListId)){
         throw new ApiError(400,"Invalid Id for video and playlist");
     }
 
@@ -194,7 +194,7 @@ const updatePlayList=asyncHandler(async(req,res)=>{
     if(!name.trim() || !description.trim()){
         throw new ApiError(400,"Name and description fields are required");
     }
-    if(!playListId || !new mongoose.Types.ObjectId.isValid(playListId)){
+    if(!playListId || !mongoose.Types.ObjectId.isValid(playListId)){
         throw new ApiError(400,"Invalid playlist id");
     }
 

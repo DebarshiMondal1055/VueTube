@@ -11,12 +11,12 @@ const router=Router()
 
 router.use(verfifyJWT)
 
-router.route("/create-playlist").post(createPlayList)
-router.route("/get-user-playlists").get(getUserPlaylist)
-router.route("/add-video-playlist").post(addVideoToPlayList)
+router.route("/create-playlist").post(createPlayList)       //done
+router.route("/p/users/:userId").get(getUserPlaylist)       //done
+router.route("/:playListId/videos/:videoId").post(addVideoToPlayList)   //done
 router.route("/delete-video-playlist").post(removeVideoFromPlaylist)
 router.route("/delete-playlist").post(deletePlayList)
-router.route("/update-playlist").patch(updatePlayList)
+router.route("/:playListId").patch(updatePlayList)      //done
 router.route("/get-playlist").get(getPlaylistById)
 
 export default router;
