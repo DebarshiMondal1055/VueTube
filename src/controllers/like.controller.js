@@ -5,6 +5,8 @@ import mongoose from "mongoose";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Like } from "../models/like.model.js";
 import { User } from "../models/User.model.js";
+import { Video } from "../models/video.model.js";
+import { Tweet } from "../models/tweets.model.js";
 
 
 
@@ -14,34 +16,38 @@ const toggleVideoLike=asyncHandler(async(req,res)=>{
     if(!videoId || !mongoose.Types.ObjectId.isValid(videoId)){
         throw new ApiError(400,"Invalid video Id");
     }
-    const isLiked = await Like.findOne({
+
+    const video=await Video.findById(videoId);
+    if(!video){
+        throw new ApiError(400,"Video Not Found");
+    }
+    let isLiked = await Like.findOne({
         videoLike: videoId,
         owner: req.user?._id
     });
 
     if(!isLiked){
         const like=await Like.create({
-            commentLike:null,
-            videoLike:videoId,
-            tweetLike:null, 
+            videoLike:videoId, 
             owner:req.user?._id
         })
         if(!like){
             throw new ApiError(500,"Video Like Failed")
         }
+        isLiked=true
         return res
         .status(201)
-        .json(new ApiResponse(201,like,"Video Liked successfully"))
+        .json(new ApiResponse(201,{isLiked,like},"Video Liked successfully"))
     }
     else{
         const unliked=await Like.findByIdAndDelete(isLiked._id);
         if(!unliked){
             throw new ApiError(500,"Video Unlike failed")
         }
-
+        isLiked=false
         return res
         .status(200)
-        .json(new ApiResponse(200,unliked,"Video unlikes successfully"))
+        .json(new ApiResponse(200,{isLiked,unliked},"Video unliked successfully"))
     }
 })
 
@@ -52,7 +58,13 @@ const toggleCommentLike=asyncHandler(async(req,res)=>{
         throw new ApiError(400,"Invalid comment Id");
     }
 
-    const isLiked = await Like.findOne({
+    const comment=await Comment.findById(commentId)
+    if(!comment){
+        throw new ApiError(400,"Comment Not Found");
+    }
+
+
+    let isLiked = await Like.findOne({
         commentLike: commentId,
         owner: req.user?._id
     });
@@ -60,16 +72,15 @@ const toggleCommentLike=asyncHandler(async(req,res)=>{
     if(!isLiked){
         const like=await Like.create({
             commentLike:commentId,
-            videoLike:null,
-            tweetLike:null, 
             owner:req.user?._id
         })
         if(!like){
             throw new ApiError(500,"Comment Like Failed")
         }
+        isLiked=true
         return res
         .status(201)
-        .json(new ApiResponse(201,like,"Comment Liked successfully"))
+        .json(new ApiResponse(201,{isLiked,like},"Comment Liked successfully"))
     }
 
     else{
@@ -77,10 +88,10 @@ const toggleCommentLike=asyncHandler(async(req,res)=>{
         if(!unliked){
             throw new ApiError(500,"Comment Unlike failed")
         }
-
+        isLiked=false;
         return res
         .status(200)
-        .json(new ApiResponse(200,unliked,"Comment unliked successfully"))
+        .json(new ApiResponse(200,{isLiked,unliked},"Comment unliked successfully"))
     }
 
 })
@@ -92,24 +103,27 @@ const toggleTweetLike=asyncHandler(async(req,res)=>{
         throw new ApiError(400,"Invalid Tweet Id");
     }
 
-    const isLiked = await Like.findOne({
+    const tweet=await Tweet.findById(tweetId)
+    if(!tweet){
+        throw new ApiError(400,"Tweet Not Found")
+    }
+    let isLiked = await Like.findOne({
         tweetLike: tweetId,
         owner: req.user?._id
     });
 
     if(!isLiked){
         const like=await Like.create({
-            commentLike:null,
-            videoLike:null,
             tweetLike:tweetId, 
             owner:req.user?._id
         })
         if(!like){
             throw new ApiError(500,"Tweet Like Failed")
         }
+        isLiked=true
         return res
         .status(201)
-        .json(new ApiResponse(201,like,"Tweet Liked successfully"))
+        .json(new ApiResponse(201,{isLiked,like},"Tweet Liked successfully"))
     }
 
     else{
@@ -117,10 +131,10 @@ const toggleTweetLike=asyncHandler(async(req,res)=>{
         if(!unliked){
             throw new ApiError(500,"Tweet Unlike failed")
         }
-
+        isLiked=false;
         return res
         .status(200)
-        .json(new ApiResponse(200,unliked,"Tweet unlikes successfully"))
+        .json(new ApiResponse(200,{isLiked,unliked},"Tweet unlikes successfully"))
     }
 
 
@@ -142,6 +156,7 @@ const getLikedVideos=asyncHandler(async(req,res)=>{
                 foreignField:"_id",
                 as:"likedVideo",
                 pipeline:[
+                    
                     {
                         $project:{
                             title:1,
@@ -174,7 +189,7 @@ const getLikedVideos=asyncHandler(async(req,res)=>{
         },
         {
             $unwind:"$uploader"
-        }
+        },
 
     ])
 
