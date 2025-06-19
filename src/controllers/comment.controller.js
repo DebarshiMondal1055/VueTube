@@ -42,9 +42,27 @@ const getVideoComments=asyncHandler(async(req,res)=>{
             },
         },
         {
+            $lookup:{
+                from:"likes",
+                localField:"_id",
+                foreignField:"commentLike",
+                as:"allLikes"
+            }
+        },
+        {
             $addFields:{
                 owner:{
                     $first:"$owner"
+                },
+                likeCount:{
+                    $size:"$allLikes"
+                },
+                isLiked:{
+                    $cond:{
+                        if:{$in:[new mongoose.Types.ObjectId(req.user?._id),"$allLikes.owner"]},
+                        then:true,
+                        else:false
+                    }
                 }
             }
         },
@@ -54,6 +72,11 @@ const getVideoComments=asyncHandler(async(req,res)=>{
         {
             $limit: Number(limit),
         },
+        {
+            $project:{
+                allLikes:0
+            }
+        }
     ])
 
     // const options={

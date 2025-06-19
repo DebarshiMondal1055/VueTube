@@ -72,17 +72,88 @@ const getVideoById=asyncHandler(async(req,res)=>{
     if(!videoId || !mongoose.Types.ObjectId.isValid(videoId)){
         throw new ApiError(400,"No video id passed");
     }
-    const video=await Video.findByIdAndUpdate(
+
+    const updatedVideo=await Video.findByIdAndUpdate(
         videoId,
         {
             $inc:{
                 views:1
             }
+        }
+    )
+
+    const video=await Video.aggregate([
+        {
+            $match:{
+                _id:new mongoose.Types.ObjectId(videoId)
+            }           
         },
         {
-            new:true
+            $lookup:{
+                from:"likes",
+                localField:"_id",
+                foreignField:"videoLike",
+                as:"allLikes",
+            }
+        },
+        {
+            $lookup:{
+                from:"subscriptions",
+                localField:"owner",
+                foreignField:"channel",
+                as:"subscribers"
+            }
+        },
+        {
+            $lookup:{
+                from:"users",
+                localField:"owner",
+                foreignField:"_id",
+                as:"owner",
+                pipeline:[
+                    {
+                        $project:{
+                            username:1,
+                            avatar:1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $addFields:{
+                owner:{
+                    $first:"$owner"
+                },
+                subcribersCount:{
+                    $size:"$subscribers"
+                },
+                isSubcribed:{
+                    $cond:{
+                        if:{$in:[new mongoose.Types.ObjectId(req.user?._id),"$subscribers.subscriber"]},
+                        then:true,
+                        else:false
+                    }
+                },
+                likesCount:{
+                    $size:"$allLikes"
+                },
+                isLiked:{
+                    $cond:{
+                        if:{$in:[new mongoose.Types.ObjectId(req.user?._id),"$allLikes.owner"]},
+                        then:true,
+                        else:false
+                    }
+                }
+            }
+        },
+        {
+            $project:{
+                allLikes:0,
+                subscribers:0
+            }
         }
-    );
+    ])
 
     console.log(video);
     
@@ -92,7 +163,7 @@ const getVideoById=asyncHandler(async(req,res)=>{
 
     return res
     .status(200)
-    .json(new ApiResponse(200,video,"Video fetched successfully"));
+    .json(new ApiResponse(200,video[0],"Video fetched successfully"));
 })
 
 
